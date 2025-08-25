@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teams Availability Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="container mx-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold">Teams Availability Tracker</h1>
+            <a href="/auth/login" class="text-blue-500 underline">Login</a>
+        </div>
+        <div class="mb-4">
+            <label for="userSelect" class="block mb-1">Select Employee</label>
+            <select id="userSelect" class="border p-2 rounded w-full"></select>
+        </div>
+        <table class="min-w-full bg-white" id="historyTable">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="py-2 px-4 border-b">Time</th>
+                    <th class="py-2 px-4 border-b">Availability</th>
+                    <th class="py-2 px-4 border-b">Activity</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+    <script>
+        async function fetchUsers() {
+            const res = await fetch('/api/users');
+            if (res.status === 401) {
+                document.getElementById('historyTable').style.display = 'none';
+                return;
+            }
+            const users = await res.json();
+            const select = document.getElementById('userSelect');
+            select.innerHTML = '<option value="">Select a user</option>';
+            users.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.user_id;
+                opt.textContent = u.display_name || u.user_id;
+                select.appendChild(opt);
+            });
+        }
+
+        async function fetchHistory(userId) {
+            const res = await fetch('/api/history?user_id=' + encodeURIComponent(userId));
+            const data = await res.json();
+            const tbody = document.getElementById('historyBody');
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="border px-4 py-2">${new Date(row.collected_at).toLocaleString()}</td>
+                                <td class="border px-4 py-2">${row.availability}</td>
+                                <td class="border px-4 py-2">${row.activity}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('userSelect').addEventListener('change', (e) => {
+            if (e.target.value) {
+                fetchHistory(e.target.value);
+            } else {
+                document.getElementById('historyBody').innerHTML = '';
+            }
+        });
+
+        fetchUsers();
+    </script>
+</body>
+</html>
