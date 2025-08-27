@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-sqlalchemy
-msal
-requests
-apscheduler
-psycopg2-binary
-authlib
